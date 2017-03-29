@@ -15,12 +15,11 @@ class ImportServiceTest extends FunSpec {
 
   import com.agilogy.fptest.State._
 
-  case class TestRepoState(records: Map[Id, IdentifiedRecord]) {
-  }
+  case class TestRepoState(records: Map[Id, IdentifiedRecord])
 
   type TestAction[T] = State[TestRepoState, T]
 
-  //TODO: Are we throwing the lefts away here?
+  //TODO: Generic state monad?
   implicit object TestActionMonad extends Monad[TestAction] {
     override def map[T, T2](m: TestAction[T])(f: (T) => T2): TestAction[T2] = {
       s =>
@@ -66,6 +65,26 @@ class ImportServiceTest extends FunSpec {
           val s2 = s.copy(records = s.records ++ Map(record.self -> record))
           (s2, Right(()))
         }
+    }
+  }
+
+  //TODO: Generic state error handling?
+  implicit object TestActionErrorHandling extends ErrorHandling[TestAction] {
+
+    import Monad._
+
+    override def leftMap[L, R, LL](m: TestAction[Either[L, R]])(f: (L) => LL): TestAction[Either[LL, R]] = m.map(_.left.map(f))
+
+    override def rightMap[L, R, RR](m: TestAction[Either[L, R]])(f: (R) => RR): TestAction[Either[L, RR]] = m.map(_.right.map(f))
+
+    override def rightFlatMap[L, R, LL >: L, RR](m: TestAction[Either[L, R]])(f: (R) => TestAction[Either[LL, RR]]): TestAction[Either[LL, RR]] = {
+      for{
+        a1 <- m
+        res <- a1 match{
+          case Left(l) => Left(l).pure
+          case Right(r) => f(r)
+        }
+      } yield res
     }
   }
 
