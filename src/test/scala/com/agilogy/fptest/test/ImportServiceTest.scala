@@ -78,9 +78,9 @@ class ImportServiceTest extends FunSpec {
     override def rightMap[L, R, RR](m: TestAction[Either[L, R]])(f: (R) => RR): TestAction[Either[L, RR]] = m.map(_.right.map(f))
 
     override def rightFlatMap[L, R, LL >: L, RR](m: TestAction[Either[L, R]])(f: (R) => TestAction[Either[LL, RR]]): TestAction[Either[LL, RR]] = {
-      for{
+      for {
         a1 <- m
-        res <- a1 match{
+        res <- a1 match {
           case Left(l) => Left(l).pure
           case Right(r) => f(r)
         }

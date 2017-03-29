@@ -1,7 +1,7 @@
 package com.agilogy.fptest
 
 object State {
-  type State[S,T] = S => (S,T)
+  type State[S, T] = S => (S, T)
 
 
   //TODO: How do they define a state monad?
